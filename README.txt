@@ -1,4 +1,4 @@
-### NES emulator ###
+### NESmulator ###
 
 NES emulator written in C from scratch.
 

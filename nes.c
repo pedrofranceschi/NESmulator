@@ -13,6 +13,24 @@ int readFileBytes(const char *name, char **program)
     return program_length;
 }
 
+int isValidROM(char *rom, int rom_length) {	
+	// .NES file format informations obtained from http://nesdev.com/NESDoc.pdf
+	
+	int conditions[] = {
+		(rom[0] == 'N'),
+		(rom[1] == 'E'),
+		(rom[2] == 'S'),
+		(rom[3] == 0x1A),
+		(rom[9] == 0)
+	};
+	
+	int i;
+	for(i = 0; i < sizeof(conditions)/sizeof(int); i++) {
+		if(!conditions[i]) return 0;
+	}
+	
+	return 1;
+}
 
 int main(int argc, char *argv[]) {
 	if(argc != 2) {
@@ -20,12 +38,16 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	
-	char *program;
-	int program_length = readFileBytes(argv[1], &program);
+	char *rom;
+	int rom_length = readFileBytes(argv[1], &rom);
 	
-	printf("ok!\n");
+	if(!isValidROM(rom, rom_length)) {
+		printf("Invalid ROM.\n");
+		return -1;
+	}
 	
-	free(program);
+	printf("Valid ROM. Starting...\n");
 	
+	free(rom);
 	return 0;
 }

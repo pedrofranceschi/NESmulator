@@ -33,3 +33,7 @@ void ppu_printMemory(PPU *ppu) {
 void freePPU(PPU *ppu) {
 	free(ppu->memory);
 }
+
+void ppu_step(PPU *ppu, CPU *cpu) {
+	
+}

@@ -31,6 +31,14 @@ int isValidROM(char *rom, int rom_length) {
 	return 1;
 }
 
+void mirrorMemoryArray(char *memory, int start, int end, int mirror_start) {
+	end += 1;
+	int i;
+	for(i = 0; i < end - start; i++) {
+		memory[mirror_start + i] = memory[start + i];
+	}
+}
+
 int main(int argc, char *argv[]) {
 	if(argc != 2) {
 		printf("Usage: %s file.nes \n", argv[0]);
@@ -95,13 +103,29 @@ int main(int argc, char *argv[]) {
 	}
 	
 	printf("rom_index: %i\n", rom_index);
-	ppu_printMemory(ppu);
+	// ppu_printMemory(ppu);
 	
 	cpu->pc = joinBytes(cpu->memory[0xFFFC], cpu->memory[0xFFFD]);
 	printf("cpu->pc: %x\n", cpu->pc);
 	
 	for(;;) {
 		step(cpu);
+		
+		// handle memory mirrorings described at
+		// http://wiki.nesdev.com/w/index.php/Mirroring#Memory_Mirroring
+		
+		mirrorMemoryArray(cpu->memory, 0x0000, 0x07FF, 0x0800);
+		mirrorMemoryArray(cpu->memory, 0x0000, 0x07FF, 0x1000);
+		mirrorMemoryArray(cpu->memory, 0x0000, 0x07FF, 0x1800);
+		
+		for(i = 0; i < 0x2000; i += 8) {
+			if(i == 0) continue;
+			mirrorMemoryArray(cpu->memory, 0x2000, 0x2007, 0x2000 + i);
+		}
+		
+		printMemory(cpu);
+		
+		ppu_step(ppu, cpu);
 		// ppu_step(ppu);
 	}
 	

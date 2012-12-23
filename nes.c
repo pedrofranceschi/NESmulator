@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "nes.h"
 
 int readFileBytes(const char *name, char **program)
@@ -48,6 +47,48 @@ int main(int argc, char *argv[]) {
 	
 	printf("Valid ROM. Starting...\n");
 	
+	int rom_banks = rom[4];
+	
+	char rom_mapper = (rom[6] >> 4) & rom[7]; // 4 lower bits in byte 6, 4 higher bits in byte 7
+	if(rom_mapper != 0) {
+		printf("Unsupported ROM mapper.\n");
+		return -1;
+	}
+	
+	CPU *cpu = malloc(sizeof(*cpu));
+	initializeCPU(cpu);
+	
+	int i = 0, j = 0;
+	int rom_index = 16;
+	
+	if((rom[6] & 0x4) != 0) { // has a 512-byte trainer to be loaded at 0x7000-0x71FF
+		for(i = 0; i < 512; i++) {
+			cpu->memory[0x7000 + i] = rom[rom_index++];
+		}
+	}
+	
+	// load rom banks into CPU's memory
+	for(i = rom_banks; i >= 1; i--) {
+		for(j = 0; j < 1024*16; j++) { // 16kb per rom bank
+			// loads the first rom bank in the end of the RAM (upper bank),
+			// according to http://fms.komkon.org/EMUL8/NES.html
+			cpu->memory[0xFFFF - (1024 * 16 * i) + j] = rom[rom_index++];
+		}
+	}
+	
+	printf("rom_index: %i\n", rom_index);
+	printMemory(cpu);
+	
+	cpu->pc = joinBytes(cpu->memory[0xFFFC], cpu->memory[0xFFFD]);
+	printf("cpu->pc: %x\n", cpu->pc);
+	
+	for(;;) {
+		step(cpu);
+		// ppu_step(ppu);
+	}
+	
+	freeCPU(cpu);
+	free(cpu);
 	free(rom);
 	return 0;
 }

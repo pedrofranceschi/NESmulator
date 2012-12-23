@@ -67,12 +67,18 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
+	int pgr_rom_index = 0x8000;
+	
+	if(rom_banks == 1) {
+		// loads the first rom bank in the end of the RAM (upper bank),
+		// according to http://fms.komkon.org/EMUL8/NES.html
+		pgr_rom_index += 1024*16;
+	}
+	
 	// load rom banks into CPU's memory
-	for(i = rom_banks; i >= 1; i--) {
+	for(i = 0; i < rom_banks; i++) {
 		for(j = 0; j < 1024*16; j++) { // 16kb per rom bank
-			// loads the first rom bank in the end of the RAM (upper bank),
-			// according to http://fms.komkon.org/EMUL8/NES.html
-			cpu->memory[0xFFFF - (1024 * 16 * i) + j] = rom[rom_index++];
+			cpu->memory[pgr_rom_index + (1024 * 16 * i) + j] = rom[rom_index++];
 		}
 	}
 	

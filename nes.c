@@ -48,6 +48,9 @@ int main(int argc, char *argv[]) {
 	printf("Valid ROM. Starting...\n");
 	
 	int rom_banks = rom[4];
+	int vrom_banks = rom[5];
+	
+	printf("vrom_banks: %i\n", vrom_banks);
 	
 	char rom_mapper = (rom[6] >> 4) & rom[7]; // 4 lower bits in byte 6, 4 higher bits in byte 7
 	if(rom_mapper != 0) {
@@ -57,6 +60,8 @@ int main(int argc, char *argv[]) {
 	
 	CPU *cpu = malloc(sizeof(*cpu));
 	initializeCPU(cpu);
+	PPU *ppu = malloc(sizeof(*ppu));
+	initializePPU(ppu);
 	
 	int i = 0, j = 0;
 	int rom_index = 16;
@@ -82,8 +87,15 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
+	// load rom banks into PPU's memory
+	for(i = 0; i < vrom_banks; i++) {
+		for(j = 0; j < 1024*8; j++) {
+			ppu->memory[(i * 1024 * 8) + j] = rom[rom_index++];
+		}
+	}
+	
 	printf("rom_index: %i\n", rom_index);
-	printMemory(cpu);
+	ppu_printMemory(ppu);
 	
 	cpu->pc = joinBytes(cpu->memory[0xFFFC], cpu->memory[0xFFFD]);
 	printf("cpu->pc: %x\n", cpu->pc);
@@ -95,6 +107,9 @@ int main(int argc, char *argv[]) {
 	
 	freeCPU(cpu);
 	free(cpu);
+	freePPU(ppu);
+	free(ppu);
 	free(rom);
+	
 	return 0;
 }

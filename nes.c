@@ -31,7 +31,7 @@ int isValidROM(char *rom, int rom_length) {
 	return 1;
 }
 
-void mirrorMemoryArray(char *memory, int start, int end, int mirror_start) {
+void mirrorMemoryArray(unsigned char **memory, int start, int end, int mirror_start) {
 	end += 1;
 	int i;
 	for(i = 0; i < end - start; i++) {
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 	
 	if((rom[6] & 0x4) != 0) { // has a 512-byte trainer to be loaded at 0x7000-0x71FF
 		for(i = 0; i < 512; i++) {
-			cpu->memory[0x7000 + i] = rom[rom_index++];
+			*cpu->memory[0x7000 + i] = rom[rom_index++];
 		}
 	}
 	
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 	// load rom banks into CPU's memory
 	for(i = 0; i < rom_banks; i++) {
 		for(j = 0; j < 1024*16; j++) { // 16kb per rom bank
-			cpu->memory[pgr_rom_index + (1024 * 16 * i) + j] = rom[rom_index++];
+			*cpu->memory[pgr_rom_index + (1024 * 16 * i) + j] = rom[rom_index++];
 		}
 	}
 	
@@ -105,8 +105,10 @@ int main(int argc, char *argv[]) {
 	printf("rom_index: %i\n", rom_index);
 	// ppu_printMemory(ppu);
 	
-	cpu->pc = joinBytes(cpu->memory[0xFFFC], cpu->memory[0xFFFD]);
+	cpu->pc = joinBytes(*cpu->memory[0xFFFC], *cpu->memory[0xFFFD]);
 	printf("cpu->pc: %x\n", cpu->pc);
+	
+	// *cpu->memory[0x2000] = 0x
 	
 	for(;;) {
 		step(cpu);
@@ -125,9 +127,18 @@ int main(int argc, char *argv[]) {
 		
 		// handle PPU memory mirrorings described at
 		// http://wiki.nesdev.com/w/index.php/PPU_memory_map
-		mirrorMemoryArray(ppu->memory, 0x2000, 0x2F00, 0x3000);
-		mirrorMemoryArray(ppu->memory, 0x3F00, 0x3F80, 0x3000);
 		
+		// 0x3f20
+		// 0x3f40
+		// 0x3f80
+		// 0x3fc0
+		// 
+		// mirrorMemoryArray(ppu->memory, 0x3f00, 0x3f1f, 0x3f20);
+		// mirrorMemoryArray(ppu->memory, 0x3f00, 0x3f1f);
+		// mirrorMemoryArray(ppu->memory, 0x3f00, 0x3f1f);
+		// mirrorMemoryArray(ppu->memory, 0x3f00, 0x3f1f);
+		
+		printMemory(cpu);
 		// ppu_printMemory(ppu);
 		
 		ppu_step(ppu, cpu);

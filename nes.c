@@ -123,7 +123,12 @@ int main(int argc, char *argv[]) {
 			mirrorMemoryArray(cpu->memory, 0x2000, 0x2007, 0x2000 + i);
 		}
 		
-		printMemory(cpu);
+		// handle PPU memory mirrorings described at
+		// http://wiki.nesdev.com/w/index.php/PPU_memory_map
+		mirrorMemoryArray(ppu->memory, 0x2000, 0x2F00, 0x3000);
+		mirrorMemoryArray(ppu->memory, 0x3F00, 0x3F80, 0x3000);
+		
+		// ppu_printMemory(ppu);
 		
 		ppu_step(ppu, cpu);
 		// ppu_step(ppu);

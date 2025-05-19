@@ -45,6 +45,7 @@ void mirrorMemoryArray(unsigned char **memory, int start, int end, int mirror_st
 	for(i = 0; i < length; i++) {
 		if (start + i < 0 || mirror_start + i < 0 || start + i >= length || mirror_start + i >= length)
 			continue;
+		memory[mirror_start + i] = memory[start + i];
 	}
 }
 

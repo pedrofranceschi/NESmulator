@@ -2,9 +2,17 @@
 
 void initializePPU(PPU *ppu) {
 	ppu->memory = malloc(sizeof(unsigned char) * PPU_MEMORY_SIZE);
+	if (!ppu->memory) {
+		fprintf(stderr, "Failed to allocate PPU memory\n");
+		exit(1);
+	}
+	memset(ppu->memory, 0, PPU_MEMORY_SIZE);
 }
 
 void ppu_writeMemory(PPU *ppu, char *buffer, int start, int offset) {
+	if (!ppu || !buffer || start < 0 || offset < 0 || start + offset > PPU_MEMORY_SIZE) {
+		return;
+	}
 	int i;
 	for(i = 0; i < offset; i++) {
 		ppu->memory[start + i] = buffer[i];
@@ -12,6 +20,9 @@ void ppu_writeMemory(PPU *ppu, char *buffer, int start, int offset) {
 }
 
 void ppu_readMemory(PPU *ppu, char *buffer, int start, int offset) {
+	if (!ppu || !buffer || start < 0 || offset < 0 || start + offset > PPU_MEMORY_SIZE) {
+		return;
+	}
 	int i;
 	for(i = 0; i < offset; i++) {
 		buffer[i] = ppu->memory[start + i];

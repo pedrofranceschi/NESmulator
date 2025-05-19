@@ -3,9 +3,16 @@
 int readFileBytes(const char *name, char **program)
 {
     FILE *fl = fopen(name, "r");
+    if (!fl) {
+        return -1;  
+    }
     fseek(fl, 0, SEEK_END);
     int program_length = (int)ftell(fl);
-	*program = malloc(program_length);
+    *program = malloc(program_length);
+    if (!*program) {
+        fclose(fl);
+        return -1; 
+    }
     fseek(fl, 0, SEEK_SET);
     fread(*program, 1, program_length, fl);
     fclose(fl);
@@ -33,9 +40,12 @@ int isValidROM(char *rom, int rom_length) {
 
 void mirrorMemoryArray(unsigned char **memory, int start, int end, int mirror_start) {
 	end += 1;
+	int length = end - start;
 	int i;
-	for(i = 0; i < end - start; i++) {
-		memory[mirror_start + i] = memory[start + i];
+	for(i = 0; i < length; i++) {
+		if (start + i >= 0 && mirror_start + i >= 0) {
+			memory[mirror_start + i] = memory[start + i];
+		}
 	}
 }
 
@@ -48,8 +58,14 @@ int main(int argc, char *argv[]) {
 	char *rom;
 	int rom_length = readFileBytes(argv[1], &rom);
 	
+	if(rom_length < 0 || !rom) {
+		printf("Failed to read ROM file.\n");
+		return -1;
+	}
+	
 	if(!isValidROM(rom, rom_length)) {
 		printf("Invalid ROM.\n");
+		free(rom);
 		return -1;
 	}
 	
@@ -63,12 +79,26 @@ int main(int argc, char *argv[]) {
 	char rom_mapper = (rom[6] >> 4) & rom[7]; // 4 lower bits in byte 6, 4 higher bits in byte 7
 	if(rom_mapper != 0) {
 		printf("Unsupported ROM mapper.\n");
+		free(rom);
 		return -1;
 	}
 	
 	CPU *cpu = malloc(sizeof(*cpu));
+	if (!cpu) {
+		printf("Failed to allocate CPU memory.\n");
+		free(rom);
+		return -1;
+	}
 	initializeCPU(cpu);
+	
 	PPU *ppu = malloc(sizeof(*ppu));
+	if (!ppu) {
+		printf("Failed to allocate PPU memory.\n");
+		freeCPU(cpu);
+		free(cpu);
+		free(rom);
+		return -1;
+	}
 	initializePPU(ppu);
 	
 	int i = 0, j = 0;

@@ -9,7 +9,7 @@ int readFileBytes(const char *name, char **program)
     fseek(fl, 0, SEEK_END);
     int program_length = (int)ftell(fl);
     *program = malloc(program_length);
-    if (!*program) {
+    if (!program) {
         fclose(fl);
         return -1; 
     }
@@ -43,9 +43,8 @@ void mirrorMemoryArray(unsigned char **memory, int start, int end, int mirror_st
 	int length = end - start;
 	int i;
 	for(i = 0; i < length; i++) {
-		if (start + i >= 0 && mirror_start + i >= 0) {
-			memory[mirror_start + i] = memory[start + i];
-		}
+		if (start + i < 0 || mirror_start + i < 0 || start + i >= length || mirror_start + i >= length)
+			continue;
 	}
 }
 

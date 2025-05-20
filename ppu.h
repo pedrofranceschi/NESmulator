@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "6502_emulator/cpu.h"
 
 #define PPU_MEMORY_SIZE 0x4000
